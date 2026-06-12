@@ -1,0 +1,12 @@
+{
+  "item.chessdim.chess_key": "Ключ шахового виміру",
+  "item.chessdim.cell_brush": "Чанковий пензлик",
+  "item.chessdim.cell_brush.preset": "Пресет: %s",
+  "item.chessdim.cell_brush.applied": "Пресет %s використан на %d чанк(ів)",
+  "item.chessdim.cell_brush.nothing_selected": "Нема вибраних чанків",
+  "chessdim.cell_type.default": "Стандарт",
+  "chessdim.cell_type.water": "Вода",
+  "chessdim.cell_type.void": "Пустота",
+  "chessdim.cell_type.stone": "Скеля",
+  "chessdim.cell_type.nether": "Незер"
+}

@@ -1,0 +1,7 @@
+{
+  "type": "chessdim:chess_type",
+  "generator": {
+    "type": "chessdim:chess_generator",
+    "biome": "minecraft:the_void"
+  }
+}

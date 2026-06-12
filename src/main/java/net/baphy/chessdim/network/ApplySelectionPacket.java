@@ -1,19 +1,17 @@
 package net.baphy.chessdim.network;
 
-import net.baphy.chessdim.client.CellBrushClientHandler;
 import net.baphy.chessdim.item.CellBrushItem;
 import net.baphy.chessdim.world.CellType;
 import net.baphy.chessdim.world.ChessCellDataHelper;
-import net.baphy.chessdim.world.ChessChunkGenerator;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +42,7 @@ public record ApplySelectionPacket(List<ChunkPos> chunks, CellType cellType) imp
                     });
 
     @Override
-    public CustomPacketPayload.Type<ApplySelectionPacket> type() {
+    public CustomPacketPayload.@NotNull Type<ApplySelectionPacket> type() {
         return TYPE;
     }
 

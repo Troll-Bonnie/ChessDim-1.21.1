@@ -4,7 +4,6 @@ import net.baphy.chessdim.client.CellBrushClientHandler;
 import net.baphy.chessdim.registry.ModDimensions;
 import net.baphy.chessdim.world.CellType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -16,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -27,8 +27,8 @@ public class CellBrushItem extends Item {
     public CellBrushItem(Properties properties) {super(properties);}
 
     @Override
-    public InteractionResultHolder<ItemStack> use(
-            Level level, Player player, InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(
+            Level level, Player player, @NotNull InteractionHand hand) {
 
         ItemStack stack = player.getItemInHand(hand);
 

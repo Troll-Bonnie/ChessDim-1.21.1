@@ -11,7 +11,7 @@ import java.util.List;
 @Mixin(WorldOpenFlows.class)
 public class ExperimentalWarningMixin {
 
-    @Inject(method = "checkForExperimentalWarning", at = @At("HEAD"), cancellable = true)
+    //@Inject(method = "checkForExperimentalWarning", at = @At("HEAD"), cancellable = true)
     private void suppressExperimentalWarning(CallbackInfoReturnable<List<?>> cir) {
         cir.setReturnValue(List.of());
     }

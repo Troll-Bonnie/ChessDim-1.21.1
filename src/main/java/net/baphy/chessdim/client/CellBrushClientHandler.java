@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
@@ -15,6 +16,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,7 +24,9 @@ public class CellBrushClientHandler {
     private static int holdTickCounter = 0;
     public static final Set<ChunkPos> clientSelection = new HashSet<>();
     private static CellType clientType = CellType.DEFAULT;
-
+    private static boolean isHolding = false;
+    private static boolean wasHolding = false;
+    private static boolean isRemoving = false;
     public static void onClientTick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
         if (!mc.level.dimension().equals(ModDimensions.CHESS_WORLD_KEY)){
@@ -35,21 +39,29 @@ public class CellBrushClientHandler {
         if (!(stack.getItem() instanceof CellBrushItem)) return;
 
         spawnSelectionParticles(mc, stack);
+        //mc.player.displayClientMessage(Component.nullToEmpty("isHolding: " + isHolding + " | wasHolding: " + wasHolding + " | isRemoving: " + isRemoving), true);
         holdTickCounter++;
         if (holdTickCounter >= 5) {
             holdTickCounter = 0;
             HitResult hit = player.pick(100.0, 0, true);
             if (hit.getType() == HitResult.Type.BLOCK) {
-                BlockPos blockPos = ((BlockHitResult) hit).getBlockPos();
-                ChunkPos chunkPos = new ChunkPos(blockPos);
-                if (mc.options.keyAttack.isDown() && !player.isShiftKeyDown()) {
-                    clientSelection.remove(chunkPos);
+                if(mc.options.keyUse.isDown() && !player.isShiftKeyDown()){
+                    isHolding = true;
+                    BlockPos blockPos = ((BlockHitResult) hit).getBlockPos();
+                    ChunkPos chunkPos = new ChunkPos(blockPos);
+                    if(!wasHolding)
+                        isRemoving = clientSelection.contains(chunkPos);
+                    if (isRemoving)
+                        clientSelection.remove(chunkPos);
+                    else
+                        clientSelection.add(chunkPos);
                 }
-                else if (mc.options.keyUse.isDown() && !player.isShiftKeyDown()) {
-                    clientSelection.add(chunkPos);
-                }
+                else
+                    isHolding = false;
             }
         }
+        wasHolding = isHolding;
+
     }
 
     private static void spawnSelectionParticles(Minecraft mc, ItemStack stack) {
@@ -110,8 +122,8 @@ public class CellBrushClientHandler {
         }
     }
 
-    private static void spawnParticle(Minecraft mc, double x, double y, double z,
-                                      float r, float g, float b) {
+    private static void spawnParticle(Minecraft mc, double x, double y, double z, float r, float g, float b) {
+        assert mc.level != null;
         mc.level.addParticle(
                 new net.minecraft.core.particles.DustParticleOptions(
                         new org.joml.Vector3f(r, g, b), 1.0f),
@@ -145,31 +157,21 @@ public class CellBrushClientHandler {
 
         ItemStack stack = mc.player.getMainHandItem();
         if (!(stack.getItem() instanceof CellBrushItem)) return;
-
-        HitResult hit = mc.player.pick(100.0, 0, false);
-        if (hit.getType() != HitResult.Type.BLOCK) return;
-
-        BlockPos blockPos = ((BlockHitResult) hit).getBlockPos();
-        ChunkPos chunkPos = new ChunkPos(blockPos);
-
-       clientSelection.remove(chunkPos);
+        applySelection(mc.player);
     }
 
     public static void applySelection(Player player) {
+        //player.sendSystemMessage(Component.nullToEmpty("DEBUG: " + Arrays.toString(clientSelection.toArray())));
         if (clientSelection.isEmpty()) {
-            player.sendSystemMessage(
-                    Component.translatable("item.chessdim.cell_brush.nothing_selected"));
+            player.displayClientMessage(Component.translatable("item.chessdim.cell_brush.nothing_selected").withColor(0xFF0000), true);
             return;
         }
 
         ModPackets.sendApplySelection(
                 new ArrayList<>(clientSelection),
                 clientType);
-        player.sendSystemMessage(
-                (Component.translatable("item.chessdim.cell_brush.preset",
-                                Component.translatable(clientType.getTranslationKey()), clientSelection.size())));
-
 
         clientSelection.clear();
+        player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP,1.0f, 1.0f);
     }
 }

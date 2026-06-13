@@ -26,34 +26,6 @@ public class CellBrushItem extends Item {
 
     public CellBrushItem(Properties properties) {super(properties);}
 
-    @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(
-            Level level, Player player, @NotNull InteractionHand hand) {
-
-        ItemStack stack = player.getItemInHand(hand);
-
-        if (!level.dimension().equals(ModDimensions.CHESS_WORLD_KEY))
-            return InteractionResultHolder.pass(stack);
-        if (player.isShiftKeyDown()) {
-            if (level.isClientSide()) {
-                CellBrushClientHandler.applySelection(player);
-            }
-            return InteractionResultHolder.success(stack);
-        }
-
-        if (level.isClientSide()) {
-            HitResult hit = player.pick(100.0, 0, false);
-            if (hit.getType() == HitResult.Type.BLOCK) {
-                BlockPos blockPos = ((BlockHitResult) hit).getBlockPos();
-                ChunkPos chunkPos = new ChunkPos(blockPos);
-                //player.sendSystemMessage(Component.literal("DEBUG: выделен чанк = (" + chunkPos.x + ", " + chunkPos.z + ")"));
-                CellBrushClientHandler.clientSelection.add(chunkPos);
-            }
-        }
-
-        return InteractionResultHolder.success(stack);
-    }
-
     public static void regenerateChunk(ServerLevel level, ChunkPos pos, CellType type) {
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         int minX = pos.getMinBlockX();

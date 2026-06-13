@@ -4,6 +4,7 @@ import net.baphy.chessdim.item.CellBrushItem;
 import net.baphy.chessdim.world.CellType;
 import net.baphy.chessdim.world.ChessCellDataHelper;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -55,13 +56,8 @@ public record ApplySelectionPacket(List<ChunkPos> chunks, CellType cellType) imp
                 ChessCellDataHelper.setCell(level, pos, pkt.cellType);
                 CellBrushItem.regenerateChunk(level, pos, pkt.cellType);
             }
+            player.displayClientMessage((Component.translatable("item.chessdim.cell_brush.applied", net.minecraft.network.chat.Component.translatable(pkt.cellType.getTranslationKey()), pkt.chunks.size())).withColor(0x00FF00), true);
 
-            player.sendSystemMessage(
-                    net.minecraft.network.chat.Component.translatable(
-                            "item.chessdim.cell_brush.applied",
-                            pkt.chunks.size(),
-                            net.minecraft.network.chat.Component.translatable(
-                                    pkt.cellType.getTranslationKey())));
         });
     }
 }

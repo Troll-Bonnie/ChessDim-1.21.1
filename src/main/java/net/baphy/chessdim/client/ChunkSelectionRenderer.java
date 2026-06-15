@@ -14,6 +14,8 @@ import org.joml.Matrix4f;
 
 public class ChunkSelectionRenderer {
 
+    public static float alpha = 0.3f;
+    public static float thickness = 0.8f;
     public static void onRenderLevel(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
 
@@ -73,66 +75,130 @@ public class ChunkSelectionRenderer {
         double maxZ = pos.getMaxBlockZ() + 1 - cz;
         double yBot = 1.0 - cy;
         double yTop = 2.0 - cy;
-        double t = 0.2; // толщина
+        float t = thickness;
+        double h = t / 2.0;
 
-        boolean hasN = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x, pos.z - 1));
-        boolean hasS = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x, pos.z + 1));
-        boolean hasW = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x - 1, pos.z));
-        boolean hasE = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x + 1, pos.z));
+        boolean hasN  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x,     pos.z - 1));
+        boolean hasS  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x,     pos.z + 1));
+        boolean hasW  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x - 1, pos.z    ));
+        boolean hasE  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x + 1, pos.z    ));
+        boolean hasNW = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x - 1, pos.z - 1));
+        boolean hasNE = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x + 1, pos.z - 1));
+        boolean hasSW = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x - 1, pos.z + 1));
+        boolean hasSE = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x + 1, pos.z + 1));
 
-        // Углы — столбы там где две стены встречаются
-        boolean cornerNW = !hasN && !hasW;
-        boolean cornerNE = !hasN && !hasE;
-        boolean cornerSW = !hasS && !hasW;
-        boolean cornerSE = !hasS && !hasE;
+        // --- Стены (центрированы по грани, укорочены на h с каждого конца) ---
+        if (!hasN) wall(buffer, matrix, minX + 2*h, minZ - h, maxX - 2*h, minZ + h, yBot, yTop, r, g, b);
+        if (!hasS) wall(buffer, matrix, minX + 2*h, maxZ - h, maxX - 2*h, maxZ + h, yBot, yTop, r, g, b);
+        if (!hasW) wall(buffer, matrix, minX - h, minZ + 2*h, minX + h, maxZ - 2*h, yBot, yTop, r, g, b);
+        if (!hasE) wall(buffer, matrix, maxX - h, minZ + 2*h, maxX + h, maxZ - 2*h, yBot, yTop, r, g, b);
 
-        // Север — смещение внутрь по +Z
-        if (!hasN)
-            solidWall(buffer, matrix, minX, minZ, maxX, minZ + t, yBot, yTop, r, g, b);
-        // Юг — смещение внутрь по -Z
-        if (!hasS)
-            solidWall(buffer, matrix, minX, maxZ - t, maxX, maxZ, yBot, yTop, r, g, b);
-        // Запад — смещение внутрь по +X
-        if (!hasW)
-            solidWall(buffer, matrix, minX, minZ, minX + t, maxZ, yBot, yTop, r, g, b);
-        // Восток — смещение внутрь по -X
-        if (!hasE)
-            solidWall(buffer, matrix, maxX - t, minZ, maxX, maxZ, yBot, yTop, r, g, b);
-        /*
-        // Столбы на углах
-        if (cornerNW)
-            solidWall(buffer, matrix, minX, minZ, minX + t, minZ + t, yBot, yTop, r, g, b);
-        if (cornerNE)
-            solidWall(buffer, matrix, maxX - t, minZ, maxX, minZ + t, yBot, yTop, r, g, b);
-        if (cornerSW)
-            solidWall(buffer, matrix, minX, maxZ - t, minX + t, maxZ, yBot, yTop, r, g, b);
-        if (cornerSE)
-            solidWall(buffer, matrix, maxX - t, maxZ - t, maxX, maxZ, yBot, yTop, r, g, b);
+        // --- Углы NW ---
+        if (!hasN && !hasW) {
+            // Внешний — нет соседей
+            outerCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop, r, g, b);
+        } else if (hasN && hasW && !hasNW) {
+            // Внутренний — два соседа но нет диагонали
+            innerCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop,
+                    true, true, r, g, b); // грани: внутренние (E и S)
+        } else if (!hasN || !hasW) {
+            // Прямой — один сосед
+            straightCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop,
+                    hasN, hasW, false, false, r, g, b);
+        }
 
-         */
+        // --- Углы NE ---
+        if (!hasN && !hasE) {
+            outerCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop, r, g, b);
+        } else if (hasN && hasE && !hasNE) {
+            innerCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop,
+                    true, false, r, g, b);
+        } else if (!hasN || !hasE) {
+            straightCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop,
+                    hasN, false, false, hasE, r, g, b);
+        }
+
+        // --- Углы SW ---
+        if (!hasS && !hasW) {
+            outerCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop, r, g, b);
+        } else if (hasS && hasW && !hasSW) {
+            innerCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop,
+                    false, true, r, g, b);
+        } else if (!hasS || !hasW) {
+            straightCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop,
+                    false, hasW, hasS, false, r, g, b);
+        }
+
+        // --- Углы SE ---
+        if (!hasS && !hasE) {
+            outerCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop, r, g, b);
+        } else if (hasS && hasE && !hasSE) {
+            innerCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop,
+                    false, false, r, g, b);
+        } else if (!hasS || !hasE) {
+            straightCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop,
+                    false, false, hasS, hasE, r, g, b);
+        }
     }
 
-    // Рисует сплошной куб (6 граней) от x1,z1 до x2,z2 по высоте yBot..yTop
-    private static void solidWall(BufferBuilder buffer, Matrix4f matrix,
-                                  double x1, double z1, double x2, double z2,
-                                  double yBot, double yTop,
-                                  float r, float g, float b) {
-        float a = 0.65f;
-        // Низ
+    // --- Стена: верх, низ, две вертикальные грани ---
+    private static void wall(BufferBuilder buffer, Matrix4f matrix,
+                             double x1, double z1, double x2, double z2,
+                             double yBot, double yTop,
+                             float r, float g, float b) {
+        float a = alpha;
         hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
-        // Верх
         hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
-        // Север (z1)
+        // Две длинные грани
         vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
-        // Юг (z2)
         vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
-        // Запад (x1)
+        // Две короткие торцевые грани
         vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
-        // Восток (x2)
         vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
     }
 
-    // Горизонтальный quad
+    // --- Внешний угол: полный куб ---
+    private static void outerCorner(BufferBuilder buffer, Matrix4f matrix,
+                                    double x1, double z1, double x2, double z2,
+                                    double yBot, double yTop,
+                                    float r, float g, float b) {
+        wall(buffer, matrix, x1, z1, x2, z2, yBot, yTop, r, g, b);
+    }
+
+    // --- Внутренний угол: верх, низ, две внутренние грани ---
+// hasN/hasW — какие соседи есть (определяет какие грани рисовать)
+    private static void innerCorner(BufferBuilder buffer, Matrix4f matrix,
+                                    double x1, double z1, double x2, double z2,
+                                    double yBot, double yTop,
+                                    boolean innerE, boolean innerS,
+                                    float r, float g, float b) {
+        float a = 0.85f;
+        hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
+        hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
+        if (innerE) vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
+        if (innerS) vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
+        if (!innerE) vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
+        if (!innerS) vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
+    }
+
+    // --- Прямой угол: верх, низ, две внешние грани ---
+// hasN/hasS/hasW/hasE — какие соседи есть
+    private static void straightCorner(BufferBuilder buffer, Matrix4f matrix,
+                                       double x1, double z1, double x2, double z2,
+                                       double yBot, double yTop,
+                                       boolean hasN, boolean hasW,
+                                       boolean hasS, boolean hasE,
+                                       float r, float g, float b) {
+        float a = 0.85f;
+        hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
+        hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
+        // Рисуем только внешние грани (где нет соседа)
+        if (!hasN) vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
+        if (!hasS) vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
+        if (!hasW) vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
+        if (!hasE) vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
+    }
+
     private static void hQuad(BufferBuilder buffer, Matrix4f matrix,
                               double x1, double z1, double x2, double z2,
                               double y, float r, float g, float b, float a) {
@@ -142,7 +208,6 @@ public class ChunkSelectionRenderer {
         buffer.addVertex(matrix, (float)x1, (float)y, (float)z2).setColor(r, g, b, a);
     }
 
-    // Вертикальный quad
     private static void vQuad(BufferBuilder buffer, Matrix4f matrix,
                               double x1, double z1, double x2, double z2,
                               double yBot, double yTop,

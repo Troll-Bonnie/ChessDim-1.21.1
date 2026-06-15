@@ -15,7 +15,7 @@ import org.joml.Matrix4f;
 public class ChunkSelectionRenderer {
 
     public static float alpha = 0.3f;
-    public static float thickness = 0.8f;
+    public static float thickness = 1.0f;
     public static void onRenderLevel(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
 
@@ -76,7 +76,7 @@ public class ChunkSelectionRenderer {
         double yBot = 1.0 - cy;
         double yTop = 2.0 - cy;
         float t = thickness;
-        double h = t / 2.0;
+        float a = alpha;
 
         boolean hasN  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x,     pos.z - 1));
         boolean hasS  = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x,     pos.z + 1));
@@ -87,125 +87,111 @@ public class ChunkSelectionRenderer {
         boolean hasSW = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x - 1, pos.z + 1));
         boolean hasSE = CellBrushClientHandler.clientSelection.contains(new ChunkPos(pos.x + 1, pos.z + 1));
 
-        // --- Стены (центрированы по грани, укорочены на h с каждого конца) ---
-        if (!hasN) wall(buffer, matrix, minX + 2*h, minZ - h, maxX - 2*h, minZ + h, yBot, yTop, r, g, b);
-        if (!hasS) wall(buffer, matrix, minX + 2*h, maxZ - h, maxX - 2*h, maxZ + h, yBot, yTop, r, g, b);
-        if (!hasW) wall(buffer, matrix, minX - h, minZ + 2*h, minX + h, maxZ - 2*h, yBot, yTop, r, g, b);
-        if (!hasE) wall(buffer, matrix, maxX - h, minZ + 2*h, maxX + h, maxZ - 2*h, yBot, yTop, r, g, b);
+        // walls
+        if (!hasN){
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ + t, maxX - t, minZ + t, maxX, minZ, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ + t, maxX - t, minZ + t, maxX, minZ, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX, minZ, maxX, minZ, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, minZ + t, maxX - t, minZ + t, yBot, yTop, r, g, b, a);
+        }
+        if (!hasS){
+            hQuad(buffer, matrix, minX, maxZ, minX + t, maxZ - t, maxX - t, maxZ - t, maxX, maxZ, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, maxZ, minX + t, maxZ - t, maxX - t, maxZ - t, maxX, maxZ, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX, maxZ, maxX, maxZ, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, maxZ - t, maxX - t, maxZ - t, yBot, yTop, r, g, b, a);
+        }
+        if (!hasW){
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ + t, minX + t, maxZ - t, minX, maxZ, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ + t, minX + t, maxZ - t, minX, maxZ, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX, minZ, minX, maxZ, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, minZ + t, minX + t, maxZ - t, yBot, yTop, r, g, b, a);
 
-        // --- Углы NW ---
-        if (!hasN && !hasW) {
-            // Внешний — нет соседей
-            outerCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop, r, g, b);
-        } else if (hasN && hasW && !hasNW) {
-            // Внутренний — два соседа но нет диагонали
-            innerCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop,
-                    true, true, r, g, b); // грани: внутренние (E и S)
-        } else if (!hasN || !hasW) {
-            // Прямой — один сосед
-            straightCorner(buffer, matrix, minX - h, minZ - h, minX + h, minZ + h, yBot, yTop,
-                    hasN, hasW, false, false, r, g, b);
+        }
+        if (!hasE) {
+            hQuad(buffer, matrix, maxX, minZ, maxX - t, minZ + t, maxX - t, maxZ - t, maxX, maxZ, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX, minZ, maxX - t, minZ + t, maxX - t, maxZ - t, maxX, maxZ, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX, minZ, maxX, maxZ, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, minZ + t, maxX - t, maxZ - t, yBot, yTop, r, g, b, a);
         }
 
-        // --- Углы NE ---
-        if (!hasN && !hasE) {
-            outerCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop, r, g, b);
-        } else if (hasN && hasE && !hasNE) {
-            innerCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop,
-                    true, false, r, g, b);
-        } else if (!hasN || !hasE) {
-            straightCorner(buffer, matrix, maxX - h, minZ - h, maxX + h, minZ + h, yBot, yTop,
-                    hasN, false, false, hasE, r, g, b);
+        //corners
+        if (hasN && hasW && !hasNW ){
+            hQuad(buffer, matrix, minX - t, minZ + t, minX + t, minZ + t, minX + t, minZ + t, minX + t, minZ - t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX - t, minZ + t, minX + t, minZ + t, minX + t, minZ + t, minX + t, minZ - t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX - t, minZ + t, minX + t, minZ + t, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, minZ - t, minX + t, minZ + t, yBot, yTop, r, g, b, a);
+        }
+        if (hasN && hasE && !hasNE ){
+            hQuad(buffer, matrix, maxX + t, minZ + t, maxX - t, minZ + t, maxX - t, minZ + t, maxX - t, minZ - t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX + t, minZ + t, maxX - t, minZ + t, maxX - t, minZ + t, maxX - t, minZ - t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, minZ - t, maxX - t, minZ + t, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX + t, minZ + t, maxX - t, minZ + t, yBot, yTop, r, g, b, a);
+        }
+        if (hasS && hasE && !hasSE ){
+            hQuad(buffer, matrix, maxX + t, maxZ - t, maxX - t, maxZ - t, maxX - t, maxZ - t, maxX - t, maxZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX + t, maxZ - t, maxX - t, maxZ - t, maxX - t, maxZ - t, maxX - t, maxZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, maxZ + t, maxX - t, maxZ - t, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX + t, maxZ - t, maxX - t, maxZ - t, yBot, yTop, r, g, b, a);
+        }
+        if (hasS && hasW && !hasSW ){
+            hQuad(buffer, matrix,minX - t, maxZ - t, minX + t, maxZ - t, minX + t, maxZ - t, minX + t, maxZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX - t, maxZ - t, minX + t, maxZ - t, minX + t, maxZ - t, minX + t, maxZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, maxZ + t, minX + t, maxZ - t, yBot, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX - t, maxZ - t, minX + t, maxZ - t, yBot, yTop, r, g, b, a);
         }
 
-        // --- Углы SW ---
-        if (!hasS && !hasW) {
-            outerCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop, r, g, b);
-        } else if (hasS && hasW && !hasSW) {
-            innerCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop,
-                    false, true, r, g, b);
-        } else if (!hasS || !hasW) {
-            straightCorner(buffer, matrix, minX - h, maxZ - h, minX + h, maxZ + h, yBot, yTop,
-                    false, hasW, hasS, false, r, g, b);
+        //straight connectors
+        if(hasN && !hasW && !hasNW ){
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ, minX + t, minZ, minX + t, minZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, minZ, minX + t, minZ, minX + t, minZ, minX + t, minZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, minZ + t, minX + t, minZ, yBot, yTop, r, g, b, a);
+        }
+        if(hasN && !hasE && !hasNE ){
+            hQuad(buffer, matrix, maxX, minZ, maxX - t, minZ, maxX - t, minZ, maxX - t, minZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX, minZ, maxX - t, minZ, maxX - t, minZ, maxX - t, minZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, minZ + t, maxX - t, minZ, yBot, yTop, r, g, b, a);
+        }
+        if(hasE && !hasN && !hasNE ){
+            hQuad(buffer, matrix, maxX, minZ, maxX, minZ + t, maxX, minZ + t, maxX - t, minZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX, minZ, maxX, minZ + t, maxX, minZ + t, maxX - t, minZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, minZ + t, maxX, minZ + t, yBot, yTop, r, g, b, a);
+        }
+        if(hasE && !hasS && !hasSE ){
+            hQuad(buffer, matrix, maxX, maxZ, maxX, maxZ - t, maxX, maxZ - t, maxX - t, maxZ - t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX, maxZ, maxX, maxZ - t, maxX, maxZ - t, maxX - t, maxZ - t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, maxZ - t, maxX, maxZ - t, yBot, yTop, r, g, b, a);
+        }
+        if(hasS && !hasE && !hasSE ){
+            hQuad(buffer, matrix, maxX - t, maxZ - t, maxX - t, maxZ, maxX - t, maxZ, maxX, maxZ, yBot, r, g, b, a);
+            hQuad(buffer, matrix, maxX - t, maxZ - t, maxX - t, maxZ, maxX - t, maxZ, maxX, maxZ, yTop, r, g, b, a);
+            vQuad(buffer, matrix, maxX - t, maxZ - t, maxX - t, maxZ, yBot, yTop, r, g, b, a);
+        }
+        if(hasS && !hasW && !hasSW ){
+            hQuad(buffer, matrix, minX, maxZ, minX + t, maxZ, minX + t, maxZ, minX + t, maxZ - t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, maxZ, minX + t, maxZ, minX + t, maxZ, minX + t, maxZ - t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, maxZ - t, minX + t, maxZ, yBot, yTop, r, g, b, a);
+        }
+        if(hasW && !hasS && !hasSW ){
+            hQuad(buffer, matrix, minX, maxZ, minX, maxZ - t, minX, maxZ - t, minX + t, maxZ - t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, maxZ, minX, maxZ - t, minX, maxZ - t, minX + t, maxZ - t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, maxZ - t, minX, maxZ - t, yBot, yTop, r, g, b, a);
+        }
+        if(hasW && !hasN && !hasNW ){
+            hQuad(buffer, matrix, minX, minZ, minX, minZ + t, minX, minZ + t, minX + t, minZ + t, yBot, r, g, b, a);
+            hQuad(buffer, matrix, minX, minZ, minX, minZ + t, minX, minZ + t, minX + t, minZ + t, yTop, r, g, b, a);
+            vQuad(buffer, matrix, minX + t, minZ + t, minX, minZ + t, yBot, yTop, r, g, b, a);
         }
 
-        // --- Углы SE ---
-        if (!hasS && !hasE) {
-            outerCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop, r, g, b);
-        } else if (hasS && hasE && !hasSE) {
-            innerCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop,
-                    false, false, r, g, b);
-        } else if (!hasS || !hasE) {
-            straightCorner(buffer, matrix, maxX - h, maxZ - h, maxX + h, maxZ + h, yBot, yTop,
-                    false, false, hasS, hasE, r, g, b);
-        }
-    }
 
-    // --- Стена: верх, низ, две вертикальные грани ---
-    private static void wall(BufferBuilder buffer, Matrix4f matrix,
-                             double x1, double z1, double x2, double z2,
-                             double yBot, double yTop,
-                             float r, float g, float b) {
-        float a = alpha;
-        hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
-        hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
-        // Две длинные грани
-        vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
-        vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
-        // Две короткие торцевые грани
-        vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
-        vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
-    }
-
-    // --- Внешний угол: полный куб ---
-    private static void outerCorner(BufferBuilder buffer, Matrix4f matrix,
-                                    double x1, double z1, double x2, double z2,
-                                    double yBot, double yTop,
-                                    float r, float g, float b) {
-        wall(buffer, matrix, x1, z1, x2, z2, yBot, yTop, r, g, b);
-    }
-
-    // --- Внутренний угол: верх, низ, две внутренние грани ---
-// hasN/hasW — какие соседи есть (определяет какие грани рисовать)
-    private static void innerCorner(BufferBuilder buffer, Matrix4f matrix,
-                                    double x1, double z1, double x2, double z2,
-                                    double yBot, double yTop,
-                                    boolean innerE, boolean innerS,
-                                    float r, float g, float b) {
-        float a = 0.85f;
-        hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
-        hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
-        if (innerE) vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
-        if (innerS) vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
-        if (!innerE) vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
-        if (!innerS) vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
-    }
-
-    // --- Прямой угол: верх, низ, две внешние грани ---
-// hasN/hasS/hasW/hasE — какие соседи есть
-    private static void straightCorner(BufferBuilder buffer, Matrix4f matrix,
-                                       double x1, double z1, double x2, double z2,
-                                       double yBot, double yTop,
-                                       boolean hasN, boolean hasW,
-                                       boolean hasS, boolean hasE,
-                                       float r, float g, float b) {
-        float a = 0.85f;
-        hQuad(buffer, matrix, x1, z1, x2, z2, yBot, r, g, b, a);
-        hQuad(buffer, matrix, x1, z1, x2, z2, yTop, r, g, b, a);
-        // Рисуем только внешние грани (где нет соседа)
-        if (!hasN) vQuad(buffer, matrix, x1, z1, x2, z1, yBot, yTop, r, g, b, a);
-        if (!hasS) vQuad(buffer, matrix, x1, z2, x2, z2, yBot, yTop, r, g, b, a);
-        if (!hasW) vQuad(buffer, matrix, x1, z1, x1, z2, yBot, yTop, r, g, b, a);
-        if (!hasE) vQuad(buffer, matrix, x2, z1, x2, z2, yBot, yTop, r, g, b, a);
     }
 
     private static void hQuad(BufferBuilder buffer, Matrix4f matrix,
-                              double x1, double z1, double x2, double z2,
+                              double x1, double z1, double x2, double z2, double x3, double z3, double x4, double z4,
                               double y, float r, float g, float b, float a) {
         buffer.addVertex(matrix, (float)x1, (float)y, (float)z1).setColor(r, g, b, a);
-        buffer.addVertex(matrix, (float)x2, (float)y, (float)z1).setColor(r, g, b, a);
         buffer.addVertex(matrix, (float)x2, (float)y, (float)z2).setColor(r, g, b, a);
-        buffer.addVertex(matrix, (float)x1, (float)y, (float)z2).setColor(r, g, b, a);
+        buffer.addVertex(matrix, (float)x3, (float)y, (float)z3).setColor(r, g, b, a);
+        buffer.addVertex(matrix, (float)x4, (float)y, (float)z4).setColor(r, g, b, a);
     }
 
     private static void vQuad(BufferBuilder buffer, Matrix4f matrix,

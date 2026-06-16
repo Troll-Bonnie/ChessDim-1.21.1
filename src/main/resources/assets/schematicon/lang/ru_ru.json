@@ -1,0 +1,13 @@
+{
+  "item.schematicon.chess_key": "Ключ шахматного измерения",
+  "item.schematicon.cell_brush": "Поклеточная кисть",
+  "item.schematicon.cell_brush.preset": "Пресет: %s",
+  "item.schematicon.cell_brush.applied": "Пресет %s использован на %d чанк(ов)",
+  "item.schematicon.cell_brush.nothing_selected": "Нет выбранных чанков",
+  "schematicon.cell_type.default": "Стандарт",
+  "schematicon.cell_type.water": "Вода",
+  "schematicon.cell_type.void": "Пустота",
+  "schematicon.cell_type.stone": "Скала",
+  "schematicon.cell_type.nether": "Незер",
+  "schematicon.cell_type.grass": "Трава"
+}

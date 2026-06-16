@@ -1,0 +1,7 @@
+{
+  "type": "schematicon:schematicon_type",
+  "generator": {
+    "type": "schematicon:schematicon_generator",
+    "biome": "minecraft:the_void"
+  }
+}

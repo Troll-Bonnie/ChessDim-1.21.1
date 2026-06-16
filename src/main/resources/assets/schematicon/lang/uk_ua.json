@@ -1,0 +1,13 @@
+{
+  "item.schematicon.chess_key": "Ключ шахового виміру",
+  "item.schematicon.cell_brush": "Чанковий пензлик",
+  "item.schematicon.cell_brush.preset": "Пресет: %s",
+  "item.schematicon.cell_brush.applied": "Пресет %s використан на %d чанк(ів)",
+  "item.schematicon.cell_brush.nothing_selected": "Нема вибраних чанків",
+  "schematicon.cell_type.default": "Стандарт",
+  "schematicon.cell_type.water": "Вода",
+  "schematicon.cell_type.void": "Пустота",
+  "schematicon.cell_type.stone": "Скеля",
+  "schematicon.cell_type.nether": "Незер",
+  "schematicon.cell_type.grass": "Трава"
+}

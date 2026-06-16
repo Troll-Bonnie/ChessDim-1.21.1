@@ -1,21 +1,11 @@
 package net.baphy.chessdim.item;
 
-import net.baphy.chessdim.client.CellBrushClientHandler;
-import net.baphy.chessdim.registry.ModDimensions;
 import net.baphy.chessdim.world.CellType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -46,24 +36,18 @@ public class CellBrushItem extends Item {
         int minZ = pos.getMinBlockZ();
 
         switch (type) {
-            case DEFAULT -> {
-                boolean isWhite = ((pos.x + pos.z) & 1) == 0;
-                var block = isWhite
-                        ? Blocks.WHITE_CONCRETE.defaultBlockState()
-                        : Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
-                for (int x = 0; x < 16; x++)
-                    for (int z = 0; z < 16; z++)
-                        for (int y = getFloorMinY(); y <= getFloorMaxY(); y++)
-                            level.setBlock(mutable.set(minX+x, y, minZ+z), block, 3);
-            }
+            case DEFAULT ->
+                fillDefault(level, pos, getFloorMinY(), getFloorMaxY(), mutable);
             case WATER -> {
+                fillDefault(level, pos, getFloorMinY(), getFloorMinY(), mutable);
                 var water = Blocks.WATER.defaultBlockState();
                 for (int x = 0; x < 16; x++)
                     for (int z = 0; z < 16; z++)
-                        for (int y = getFloorMinY(); y <= getFloorMaxY(); y++)
+                        for (int y = getFloorMinY() + 1; y <= getFloorMaxY(); y++)
                             level.setBlock(mutable.set(minX+x, y, minZ+z), water, 3);
             }
-            case VOID -> { }
+            case VOID ->
+                fillDefault(level, pos, getFloorMinY(), getFloorMinY(), mutable);
             case STONE, NETHER -> {
                 java.util.Random rand = new java.util.Random(
                         (long) pos.x * 341873128712L + (long) pos.z * 132897987541L);
@@ -85,6 +69,30 @@ public class CellBrushItem extends Item {
                             level.setBlock(mutable.set(minX+x, y, minZ+z), block, 3);
                         }
             }
+            case GRASS -> {
+                var dirt = Blocks.DIRT.defaultBlockState();
+                var grass = Blocks.GRASS_BLOCK.defaultBlockState();
+                for (int x = 0; x < 16; x++)
+                    for (int z = 0; z < 16; z++) {
+                        for (int y = getFloorMinY(); y < getFloorMaxY(); y++)
+                            level.setBlock(mutable.set(minX + x, y, minZ + z), dirt, 3);
+                        level.setBlock(mutable.set(minX + x, getFloorMaxY(), minZ + z), grass, 3);
+                    }
+            }
         }
+    }
+
+    public static void fillDefault(ServerLevel level, ChunkPos pos,
+                            int minY, int maxY, BlockPos.MutableBlockPos mutable) {
+        int minX = pos.getMinBlockX();
+        int minZ = pos.getMinBlockZ();
+        boolean isWhite = ((pos.x + pos.z) & 1) == 0;
+        var block = isWhite
+                ? Blocks.WHITE_CONCRETE.defaultBlockState()
+                : Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
+        for (int x = 0; x < 16; x++)
+            for (int z = 0; z < 16; z++)
+                for (int y = minY; y <= maxY; y++)
+                    level.setBlock(mutable.set(minX+x, y, minZ+z), block, 3);
     }
 }

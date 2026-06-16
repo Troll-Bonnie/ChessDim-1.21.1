@@ -8,5 +8,6 @@
   "chessdim.cell_type.water": "Вода",
   "chessdim.cell_type.void": "Пустота",
   "chessdim.cell_type.stone": "Скала",
-  "chessdim.cell_type.nether": "Незер"
+  "chessdim.cell_type.nether": "Незер",
+  "chessdim.cell_type.grass": "Трава"
 }

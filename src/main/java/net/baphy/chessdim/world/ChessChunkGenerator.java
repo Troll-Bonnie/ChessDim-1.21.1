@@ -4,7 +4,6 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -33,8 +32,6 @@ public class ChessChunkGenerator extends ChunkGenerator {
     ).apply(instance, ChessChunkGenerator::new));
 
     private final Holder<Biome> biomeHolder;
-    private ServerLevel serverLevel;
-
     // Белый и светло-серый бетон
     private static final BlockState WHITE = Blocks.WHITE_CONCRETE.defaultBlockState();
     private static final BlockState GRAY  = Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
@@ -60,29 +57,26 @@ public class ChessChunkGenerator extends ChunkGenerator {
         this.biomeHolder = biome;
     }
 
-    public void setServerLevel(ServerLevel level){
-        this.serverLevel = level;
-    }
-
     @Override
-    protected MapCodec<? extends ChunkGenerator> codec() {
+    protected @NotNull MapCodec<? extends ChunkGenerator> codec() {
         return CODEC;
     }
 
     @Override
-    public void applyCarvers(WorldGenRegion level, long seed, RandomState random, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunk, GenerationStep.Carving step) {
+    public void applyCarvers(@NotNull WorldGenRegion level, long seed, @NotNull RandomState random, @NotNull BiomeManager biomeManager, @NotNull StructureManager structureManager, @NotNull ChunkAccess chunk, GenerationStep.@NotNull Carving step) {
 
     }
 
     @Override
-    public void buildSurface(WorldGenRegion level, StructureManager structureManager, RandomState random, ChunkAccess chunk) {
+    public void buildSurface(@NotNull WorldGenRegion level, @NotNull StructureManager structureManager, @NotNull RandomState random, @NotNull ChunkAccess chunk) {
 
     }
 
     @Override
-    public void spawnOriginalMobs(WorldGenRegion level) {
+    public void spawnOriginalMobs(@NotNull WorldGenRegion level) {
 
     }
+
 
     @Override
     public int getGenDepth() {
@@ -90,23 +84,10 @@ public class ChessChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState, StructureManager structureManager, ChunkAccess chunk) {
+    public @NotNull CompletableFuture<ChunkAccess> fillFromNoise(@NotNull Blender blender, @NotNull RandomState randomState, @NotNull StructureManager structureManager, ChunkAccess chunk) {
         ChunkPos chunkPos = chunk.getPos();
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-
-        CellType cellType = CellType.DEFAULT;
-        if (serverLevel != null) {
-            cellType = ChessCellDataHelper.getCell(serverLevel, chunkPos);
-        }
-
-        switch (cellType) {
-            case DEFAULT -> fillDefault(chunk, chunkPos, mutable);
-            case WATER   -> fillWater(chunk, chunkPos, mutable, true);
-            case VOID    -> fillWater(chunk, chunkPos, mutable, false);
-            case STONE   -> fillStone(chunk, chunkPos, mutable, randomState, false);
-            case NETHER  -> fillStone(chunk, chunkPos, mutable, randomState, true);
-        }
-
+        fillDefault(chunk, chunkPos, mutable);
         return CompletableFuture.completedFuture(chunk);
     }
 
@@ -121,12 +102,12 @@ public class ChessChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public int getBaseHeight(int x, int z, Heightmap.Types type, LevelHeightAccessor level, RandomState random) {
+    public int getBaseHeight(int x, int z, Heightmap.@NotNull Types type, @NotNull LevelHeightAccessor level, @NotNull RandomState random) {
         return FLOOR_MAX_Y + PILLAR_TOP + 1;
     }
 
     @Override
-    public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor level, RandomState random) {
+    public @NotNull NoiseColumn getBaseColumn(int x, int z, @NotNull LevelHeightAccessor level, @NotNull RandomState random) {
         boolean isWhite = (Math.floorDiv(x, 16) + Math.floorDiv(z, 16) & 1) == 0;
         BlockState block = isWhite ? WHITE : GRAY;
 
@@ -138,7 +119,7 @@ public class ChessChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public void addDebugScreenInfo(List<String> info, RandomState random, BlockPos pos) {
+    public void addDebugScreenInfo(List<String> info, @NotNull RandomState random, @NotNull BlockPos pos) {
         ChunkPos cp = new ChunkPos(pos);
         boolean isWhite = ((cp.x + cp.z) & 1) == 0;
         info.add("ChessDim cell: " + (isWhite ? "WHITE" : "GRAY")
@@ -156,80 +137,6 @@ public class ChessChunkGenerator extends ChunkGenerator {
                     chunk.setBlockState(
                             mutable.set(pos.getMinBlockX()+x, y, pos.getMinBlockZ()+z),
                             block, false);
-    }
-
-    private void fillWater(ChunkAccess chunk, ChunkPos pos,
-                           BlockPos.MutableBlockPos mutable, boolean isWater) {
-        BlockState water = isWater
-                ? Blocks.WATER.defaultBlockState()
-                : Blocks.AIR.defaultBlockState();
-
-        for (int x = 0; x < 16; x++)
-            for (int z = 0; z < 16; z++)
-                for (int y = FLOOR_MIN_Y; y <= FLOOR_MAX_Y; y++)
-                    chunk.setBlockState(
-                            mutable.set(pos.getMinBlockX()+x, y, pos.getMinBlockZ()+z),
-                            water, false);
-    }
-
-    private void fillStone(ChunkAccess chunk, ChunkPos pos,
-                           BlockPos.MutableBlockPos mutable,
-                           RandomState randomState, boolean isNether) {
-
-        // Базовый блок
-        BlockState base = isNether
-                ? Blocks.NETHERRACK.defaultBlockState()
-                : Blocks.STONE.defaultBlockState();
-
-        // Руды для оверворлда
-        List<BlockState> ores = getOres(isNether);
-
-        // Используем позицию чанка как seed для рандома
-        java.util.Random rand = new java.util.Random(
-                (long) pos.x * 341873128712L + (long) pos.z * 132897987541L
-        );
-
-        int topY = FLOOR_MAX_Y + PILLAR_TOP; // Y=50
-
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = FLOOR_MIN_Y; y <= topY; y++) {
-
-                    BlockState block = base;
-
-                    // Шанс руды: 1.5% для каждого блока
-                    if (rand.nextFloat() < 0.015f) {
-                        block = ores.get(rand.nextInt(ores.size()));
-                    }
-
-                    chunk.setBlockState(
-                            mutable.set(pos.getMinBlockX()+x, y, pos.getMinBlockZ()+z),
-                            block, false);
-                }
-            }
-        }
-    }
-
-    private static @NotNull List<BlockState> getOres(boolean isNether) {
-        List<BlockState> overworldOres = List.of(
-                Blocks.COAL_ORE.defaultBlockState(),
-                Blocks.IRON_ORE.defaultBlockState(),
-                Blocks.COPPER_ORE.defaultBlockState(),
-                Blocks.GOLD_ORE.defaultBlockState(),
-                Blocks.REDSTONE_ORE.defaultBlockState(),
-                Blocks.LAPIS_ORE.defaultBlockState(),
-                Blocks.DIAMOND_ORE.defaultBlockState(),
-                Blocks.EMERALD_ORE.defaultBlockState()
-        );
-
-        // Руды для незера
-        List<BlockState> netherOres = List.of(
-                Blocks.NETHER_QUARTZ_ORE.defaultBlockState(),
-                Blocks.NETHER_GOLD_ORE.defaultBlockState(),
-                Blocks.ANCIENT_DEBRIS.defaultBlockState()
-        );
-
-        return isNether ? netherOres : overworldOres;
     }
 
 

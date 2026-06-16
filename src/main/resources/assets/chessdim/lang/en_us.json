@@ -8,5 +8,6 @@
   "chessdim.cell_type.water": "Water",
   "chessdim.cell_type.void": "Void",
   "chessdim.cell_type.stone": "Stone",
-  "chessdim.cell_type.nether": "Nether"
+  "chessdim.cell_type.nether": "Nether",
+  "chessdim.cell_type.grass": "Grass"
 }

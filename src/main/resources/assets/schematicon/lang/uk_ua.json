@@ -1,5 +1,5 @@
 {
-  "item.schematicon.chess_key": "Ключ шахового виміру",
+  "item.schematicon.schematicon_plan": "План Схематікону",
   "item.schematicon.cell_brush": "Чанковий пензлик",
   "item.schematicon.cell_brush.preset": "Пресет: %s",
   "item.schematicon.cell_brush.applied": "Пресет %s використан на %d чанк(ів)",

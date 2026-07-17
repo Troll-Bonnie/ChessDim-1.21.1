@@ -36,6 +36,10 @@ public enum CellType {
         return "schematicon.cell_type."+name().toLowerCase();
     }
 
+    public int getModelIndex() {
+        return ordinal();
+    }
+
     public CellType next() {
         CellType[] values = values();
         return values[(ordinal() + 1) % values.length];

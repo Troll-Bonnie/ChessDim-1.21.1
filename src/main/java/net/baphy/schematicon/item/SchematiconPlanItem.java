@@ -15,8 +15,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class ChessKeyItem extends Item {
-    public ChessKeyItem(Properties properties) {
+public class SchematiconPlanItem extends Item {
+    public SchematiconPlanItem(Properties properties) {
         super(properties);
     }
 

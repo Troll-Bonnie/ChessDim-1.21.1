@@ -1,5 +1,5 @@
 {
-  "item.schematicon.chess_key": "Chess Portal Key",
+  "item.schematicon.schematicon_plan": "Schematicon Plan",
   "item.schematicon.cell_brush": "Cell Brush",
   "item.schematicon.cell_brush.preset": "Preset: %s",
   "item.schematicon.cell_brush.applied": "%s preset applied to %d chunks",

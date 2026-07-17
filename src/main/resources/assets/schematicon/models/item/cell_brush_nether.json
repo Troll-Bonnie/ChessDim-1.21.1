@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "schematicon:item/chess_key"
+    "layer0": "schematicon:item/cell_brush_nether"
   }
 }

@@ -66,6 +66,10 @@ public class CellBrushClientHandler {
         if (!(stack.getItem() instanceof CellBrushItem)) return false;
 
         clientType = delta > 0 ? clientType.next() : clientType.prev();
+        stack.set(
+                net.minecraft.core.component.DataComponents.CUSTOM_MODEL_DATA,
+                new net.minecraft.world.item.component.CustomModelData(clientType.getModelIndex())
+        );
         mc.player.displayClientMessage(
                 Component.translatable("item.schematicon.cell_brush.preset",
                         Component.translatable(clientType.getTranslationKey())

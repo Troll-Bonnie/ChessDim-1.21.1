@@ -1,7 +1,7 @@
 package net.baphy.schematicon.registry;
 
 import net.baphy.schematicon.SchematiconMod;
-import net.baphy.schematicon.item.ChessKeyItem;
+import net.baphy.schematicon.item.SchematiconPlanItem;
 import net.baphy.schematicon.item.CellBrushItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -16,8 +16,8 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SchematiconMod.MOD_ID);
 
-    public static final DeferredItem<ChessKeyItem> CHESS_KEY = ITEMS.register("chess_key", () ->
-                    new ChessKeyItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<SchematiconPlanItem> SCHEMATICON_PLAN = ITEMS.register("schematicon_plan", () ->
+                    new SchematiconPlanItem(new Item.Properties().stacksTo(1)));
 
     public static final DeferredItem<CellBrushItem> CELL_BRUSH = ITEMS.register("cell_brush", () ->
                     new CellBrushItem(new Item.Properties().stacksTo(1)));
@@ -29,7 +29,7 @@ public class ModItems {
     @SubscribeEvent
     public static void onBuildCreativeTab(BuildCreativeModeTabContentsEvent event){
         if(event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
-            event.accept(CHESS_KEY.get());
+            event.accept(SCHEMATICON_PLAN.get());
             event.accept(CELL_BRUSH.get());
         }
     }

@@ -6,7 +6,12 @@ license="MIT"
 modId="schematicon"
 version="1.0.0"
 displayName="Schematicon"
-description="A creative chess-styled dimension with isolated inventory."
+description="A creative planning dimension for builders. Switch from survival to creative and back with fully separate inventories and no balance disruption."
+logoFile="logo.png"
+authors="Baphy404"
+
+[[mods.contacts]]
+sources="https://github.com/Troll-Bonnie/ChessDim-1.21.1"
 
 [[dependencies.schematicon]]
 modId="neoforge"

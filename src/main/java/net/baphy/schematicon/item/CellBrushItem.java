@@ -1,11 +1,17 @@
 package net.baphy.schematicon.item;
 
 import net.baphy.schematicon.world.CellType;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -15,6 +21,24 @@ import static net.baphy.schematicon.world.SchematiconChunkGenerator.getFloorMinY
 public class CellBrushItem extends Item {
 
     public CellBrushItem(Properties properties) {super(properties);}
+
+    @Override
+    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context,
+                                @NotNull List<Component> tooltip, @NotNull TooltipFlag flag) {
+        if (Screen.hasShiftDown()) {
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip1").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip2"));
+            tooltip.add(Component.empty());
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip3").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip4"));
+            tooltip.add(Component.empty());
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip5").withStyle(ChatFormatting.GRAY));
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.tooltip6"));
+        } else {
+            tooltip.add(Component.translatable("item.schematicon.cell_brush.hold_shift")
+                    .withStyle(ChatFormatting.GRAY));
+        }
+    }
 
     public static void regenerateChunk(ServerLevel level, ChunkPos pos, CellType type) {
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
